@@ -11,8 +11,6 @@ contract SmartGridService is Ownable {
         int32 rate;
     }
 
-    int32[] public LEVELS = [0, 1000];
-
     IERC20 token;
 
     event Invoice(address subscriber, int32 usage, uint32 amount);
@@ -26,22 +24,20 @@ contract SmartGridService is Ownable {
         int32 amount = band.base + band.rate * ausage;
 
         if( amount > 0) {
-            token.transferFrom(asubscriber, owner, amount);
+            token.transferFrom(asubscriber, owner(), uint32(amount));
         } else {
-            token.transferFrom(owner, asubscriber, -amount);
+            token.transferFrom(owner(), asubscriber, uint32(-amount));
         }
 
-        emit Invoice(asubscriber, ausage, amount);
+        emit Invoice(asubscriber, ausage, uint32(amount));
     }
 
 
     function getBillingBand(address subscriber, int32 ausage) public view returns(Band memory) {
-        //TODO
-
-        if (ausage < LEVELS[0]) {
+        if (ausage < 0) {
             return Band({base:0, rate: -10});
         } 
-        if (ausage < LEVELS[1]) {
+        if (ausage < 1000) {
             return Band({base:50, rate: 10});
         } 
         return Band({base:500, rate: 100});
