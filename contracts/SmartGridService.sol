@@ -35,11 +35,11 @@ contract SmartGridService is Ownable {
 
     function getBillingBand(address subscriber, int32 ausage) public view returns(Band memory) {
         if (ausage < 0) {
-            return Band({base:0, rate: -10});
+            return Band({base:0, rate: -1});
         } 
         if (ausage < 1000) {
-            return Band({base:50, rate: 10});
+            return Band({base: 5, rate: 10});
         } 
-        return Band({base:500, rate: 100});
+        return Band({base:50, rate: 10});
     }
 }
