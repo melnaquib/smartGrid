@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SmartGridService is Ownable {
 
+    mapping (address => mapping (uint32 => bool)) paid;
     struct Band {
         int32 base;
         int32 rate;
@@ -19,7 +20,16 @@ contract SmartGridService is Ownable {
         token = atoken;
     }
 
-    function reportUsage(address asubscriber, int32 ausage, uint32 abillId) external onlyOwner {
+    function hasPaid(address asubscriber, uint32 abillId) public view returns (bool) {
+        return paid[asubscriber][abillId] ;
+    }
+
+    modifier notPaid(address asubscriber, uint32 abillId) {
+        require(!hasPaid(asubscriber, abillId));
+        _;
+    }
+    
+    function reportUsage(address asubscriber, int32 ausage, uint32 abillId) external onlyOwner notPaid(asubscriber, abillId) {
         Band memory band = getBillingBand(asubscriber, ausage);
         int32 amount = band.base + band.rate * ausage;
 
@@ -29,11 +39,12 @@ contract SmartGridService is Ownable {
             token.transferFrom(owner(), asubscriber, uint32(-amount));
         }
 
+        paid[asubscriber][abillId] = true;
         emit Invoice(asubscriber, ausage, uint32(amount));
     }
 
 
-    function getBillingBand(address subscriber, int32 ausage) public view returns(Band memory) {
+    function getBillingBand(address asubscriber, int32 ausage) public pure returns(Band memory) {
         if (ausage < 0) {
             return Band({base:0, rate: -1});
         } 
